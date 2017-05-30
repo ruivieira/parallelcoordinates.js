@@ -3,6 +3,8 @@ var ParallelCoordinates;
     var ParallelCoordinates = (function () {
         function ParallelCoordinates(data, options) {
             var _this = this;
+            this.keys = [];
+            this.totals = {};
             this.WIDTH = Math.round(window.innerWidth * (window.innerWidth <= 960 ? 1 : 0.8));
             this.HEIGHT = Math.min(Math.max(Math.round(window.innerHeight - 150), 420), 600);
             this.margins = {
@@ -20,7 +22,20 @@ var ParallelCoordinates;
             this.extents = {};
             this.scale_type = options.scale || "linear";
             this.options = options;
-            this.nested_data = this.nestData(data);
+            for (var _i = 0, data_1 = data; _i < data_1.length; _i++) {
+                var d = data_1[_i];
+                this.keys.push(d["key"]);
+            }
+            for (var _a = 0, data_2 = data; _a < data_2.length; _a++) {
+                var d = data_2[_a];
+                if (!this.totals[d["key"]]) {
+                    this.totals[d["key"]] = {
+                        key: d["key"]
+                    };
+                }
+                this.totals[d["key"]][d["type"]] = d["total"];
+            }
+            this.nested_data = this.nestData(d3.values(this.totals));
             this.marker_width = [
                 2,
                 (this.WIDTH - d3.sum([this.margins.left, this.margins.right, this.padding.left, this.padding.right])) / this.options.columns.length
@@ -110,9 +125,8 @@ var ParallelCoordinates;
                     .classed("hover", true);
             })
                 .on("mouseout", function (d) {
-                _this.svg.selectAll("g.hover,g.year")
-                    .classed("hover", false)
-                    .classed("year", false);
+                _this.svg.selectAll("g.hover")
+                    .classed("hover", false);
             });
             var key = this.keys_group.selectAll("g.key")
                 .data(this.nested_data, function (d) {
@@ -135,10 +149,10 @@ var ParallelCoordinates;
                 return _this.yscales[options.use[d['col']] || d['col']](d['y']);
             });
             this.createKeys(key);
-            this.updateConnections(this.options.duration);
-            this.updateMarkers(this.options.duration);
-            this.updateLabels(this.options.duration);
-            this.updateKeyLabels(this.options.duration);
+            this.updateConnections(-1);
+            this.updateMarkers(-1);
+            this.updateLabels(-1);
+            this.updateKeyLabels(-1);
         }
         ParallelCoordinates.prototype.nestData = function (data) {
             var _this = this;
@@ -153,9 +167,7 @@ var ParallelCoordinates;
                     r[col] = d3.sum(leaves, function (o) {
                         return o[col];
                     });
-                    r['year'] = leaves[0]['year'];
-                    r['name'] = leaves[0]["key"];
-                    r['name2'] = leaves[0]["key"];
+                    r['key'] = leaves[0]["key"];
                 };
                 for (var _i = 0, _a = _this.options.columns; _i < _a.length; _i++) {
                     var col = _a[_i];
@@ -168,7 +180,7 @@ var ParallelCoordinates;
                 return d.key != "null";
             })
                 .sort(function (a, b) {
-                return d3.descending(a.values["A"], b.values["A"]);
+                return d3.descending(a.values[_this.options.use["name"]], b.values[_this.options.use["name"]]);
             })
                 .slice(0, 28);
         };
@@ -614,32 +626,19 @@ var ParallelCoordinates;
             });
             var new_label = labels.enter()
                 .append("g")
-                .attr("class", "label")
-                .classed("year", function (d) {
-                return d['column'] == "year";
-            });
+                .attr("class", "label");
             new_label
                 .filter(function (d) {
-                return d['column'] != "year" && d['column'] != _this.options.title_column;
+                return d['column'] != _this.options.title_column;
             })
                 .append("path");
             new_label
                 .filter(function (d) {
-                return d['column'] != "year" && d['column'] != _this.options.title_column;
+                return d['column'] != _this.options.title_column;
             })
                 .append("text")
                 .attr("x", 0)
                 .attr("y", 4);
-            new_label
-                .filter(function (d) {
-                return d['column'] == "year";
-            })
-                .append("text")
-                .attr("x", 0)
-                .attr("y", 3)
-                .text(function (d) {
-                return d['value'];
-            });
             new_label.append("rect")
                 .attr("class", "ix")
                 .attr("y", -8)
@@ -680,9 +679,6 @@ var ParallelCoordinates;
                 if (d['column'] == _this.options.title_column) {
                     return -(_this.padding.left + _this.margins.left);
                 }
-                if (d['column'] == "year") {
-                    return -40;
-                }
                 return d['text_width'] / 2;
             })
                 .attr("width", function (d) {
@@ -695,9 +691,6 @@ var ParallelCoordinates;
                 .attr("transform", function (d) {
                 var x = _this.xscale(d['column']);
                 var y = _this.yscales[d['column']](d['value']);
-                if (d['column'] == "year") {
-                    return "translate(" + (x + 20) + "," + y + ")";
-                }
                 if (d[d['column']] === 0) {
                     y = _this.yscales[d['column']].range()[0];
                 }
@@ -705,20 +698,6 @@ var ParallelCoordinates;
                     y = _this.yscales[d['column']](d['value'] / d['ref']);
                 }
                 return "translate(" + (x - d['marker_width'] / 2 - d['text_width'] / 2 - 10) + "," + y + ")";
-            });
-            labels
-                .filter(function (d) {
-                return d['column'] == "year";
-            })
-                .on("mouseover", function (d) {
-                _this.labels_group
-                    .selectAll(".labels").classed("year", function (l) {
-                    return l.values.year == d['value'];
-                });
-                _this.keys_group
-                    .selectAll(".key").classed("year", function (l) {
-                    return l.values.year == d['value'];
-                });
             });
         };
         ParallelCoordinates.prototype.createKeyLabel = function (key_label) {

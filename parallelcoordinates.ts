@@ -43,6 +43,8 @@ module ParallelCoordinates {
         private width_scales: { [s: string]: any; };
         private yscales: any;
         private marker_width: number[];
+        private keys : Array<string> = [];
+        private totals = {};
 
         private scale_type: string;
         private options: Options;
@@ -71,7 +73,22 @@ module ParallelCoordinates {
             this.scale_type = options.scale || "linear";
             this.options = options;
 
-            this.nested_data = this.nestData(data);
+            for (let d of data) {
+                this.keys.push(d["key"]);
+            }
+
+            for (let d of data) {
+                if (!this.totals[d["key"]]) {
+                    this.totals[d["key"]] = {
+                        key: d["key"]
+                    };
+                }
+
+                this.totals[d["key"]][d["type"]] = d["total"];
+            }
+
+
+            this.nested_data = this.nestData(d3.values(this.totals));
 
             this.marker_width = [
                 2,
@@ -181,9 +198,8 @@ module ParallelCoordinates {
                         .classed("hover", true)
                 })
                 .on("mouseout", (d) => {
-                    this.svg.selectAll("g.hover,g.year")
+                    this.svg.selectAll("g.hover")
                         .classed("hover", false)
-                        .classed("year", false);
                 });
 
             let key = this.keys_group.selectAll("g.key")
@@ -210,10 +226,10 @@ module ParallelCoordinates {
 
 
             this.createKeys(key);
-            this.updateConnections(this.options.duration);
-            this.updateMarkers(this.options.duration);
-            this.updateLabels(this.options.duration);
-            this.updateKeyLabels(this.options.duration);
+            this.updateConnections(-1);
+            this.updateMarkers(-1);
+            this.updateLabels(-1);
+            this.updateKeyLabels(-1);
 
         }
 
@@ -234,9 +250,7 @@ module ParallelCoordinates {
                             return o[col]
                         });
 
-                        r['year'] = leaves[0]['year'];
-                        r['name'] = leaves[0]["key"];
-                        r['name2'] = leaves[0]["key"];
+                        r['key'] = leaves[0]["key"];
                     }
                     return r;
                 })
@@ -245,7 +259,7 @@ module ParallelCoordinates {
                     return d.key != "null";
                 })
                 .sort((a, b) => {
-                    return d3.descending(a.values["A"], b.values["A"]);
+                    return d3.descending(a.values[this.options.use["name"]], b.values[this.options.use["name"]]);
                 })
                 .slice(0, 28)
         }
@@ -766,36 +780,21 @@ module ParallelCoordinates {
                 });
             let new_label = labels.enter()
                 .append("g")
-                .attr("class", "label")
-                .classed("year", (d) => {
-                    return d['column'] == "year";
-                });
-
+                .attr("class", "label");
 
             new_label
                 .filter((d) => {
-                    return d['column'] != "year" && d['column'] != this.options.title_column;
+                    return d['column'] != this.options.title_column;
                 })
                 .append("path");
 
             new_label
                 .filter((d) => {
-                    return d['column'] != "year" && d['column'] != this.options.title_column;
+                    return d['column'] != this.options.title_column;
                 })
                 .append("text")
                 .attr("x", 0)
                 .attr("y", 4);
-
-            new_label
-                .filter((d) => {
-                    return d['column'] == "year";
-                })
-                .append("text")
-                .attr("x", 0)
-                .attr("y", 3)
-                .text(function (d) {
-                    return d['value'];
-                });
 
             new_label.append("rect")
                 .attr("class", "ix")
@@ -846,9 +845,6 @@ module ParallelCoordinates {
                     if (d['column'] == this.options.title_column) {
                         return -(this.padding.left + this.margins.left);
                     }
-                    if (d['column'] == "year") {
-                        return -40;
-                    }
                     return d['text_width'] / 2;
                 })
                 .attr("width", (d) => {
@@ -864,10 +860,6 @@ module ParallelCoordinates {
                     let x = this.xscale(d['column']);
                     let y = this.yscales[d['column']](d['value']);
 
-                    if (d['column'] == "year") {
-                        return "translate(" + (x + 20) + "," + y + ")"
-                    }
-
                     if (d[d['column']] === 0) {
                         y = this.yscales[d['column']].range()[0]
                     }
@@ -877,22 +869,6 @@ module ParallelCoordinates {
 
                     return `translate(${(x - d['marker_width'] / 2 - d['text_width'] / 2 - 10)},${y})`;
                 });
-
-            labels
-                .filter((d) => {
-                    return d['column'] == "year"
-                })
-                .on("mouseover", (d) => {
-                    this.labels_group
-                        .selectAll(".labels").classed("year", (l) => {
-                        return l.values.year == d['value'];
-                    });
-                    this.keys_group
-                        .selectAll(".key").classed("year", (l) => {
-                        return l.values.year == d['value'];
-                    });
-
-                })
 
         }
 
