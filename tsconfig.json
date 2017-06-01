@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "sourceMap": true
+  },
+  "files": [
+    "parallelcoordinates.ts",
+    "typings/d3.d.ts"
+  ]
+}

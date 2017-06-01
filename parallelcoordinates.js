@@ -113,7 +113,6 @@ var ParallelCoordinates;
                 _this.keys_group
                     .selectAll("g.key[rel='" + d.key + "']")
                     .classed("highlight", $this.classed("highlight"));
-                // callback for clicking label
                 console.log(d.key);
             })
                 .on("mouseover", function (d) {
@@ -325,7 +324,6 @@ var ParallelCoordinates;
                 })
                     .classed("visible", true)
                     .select("div");
-                // .html(this.options.help[d])
             })
                 .on("mouseout", function () {
                 _this.tooltip
@@ -664,7 +662,6 @@ var ParallelCoordinates;
             })
                 .each(function (d) {
                 d['marker_width'] = _this.width_scales[d['column']](d['value'] / ((_this.options.dimensions.indexOf(d['column']) > -1) ? 1 : d['ref']));
-                // d['text_width'] = this.getBBox().width;
             });
             labels
                 .select("path")
@@ -737,3 +734,4 @@ var ParallelCoordinates;
     }());
     ParallelCoordinates_1.ParallelCoordinates = ParallelCoordinates;
 })(ParallelCoordinates || (ParallelCoordinates = {}));
+//# sourceMappingURL=parallelcoordinates.js.map

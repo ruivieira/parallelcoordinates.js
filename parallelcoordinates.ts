@@ -15,7 +15,6 @@ module ParallelCoordinates {
         dimensions: Array<string>,
         column_map: { [s: string]: any },
         duration: number,
-        path: string,
         extension: string
     }
     export interface Box {
@@ -44,7 +43,7 @@ module ParallelCoordinates {
         private yscales: any;
         private marker_width: number[];
         private keys : Array<string> = [];
-        private totals = {};
+        private totals: {[p:string] : {[q:string] : string}} = {};
 
         private scale_type: string;
         private options: Options;
@@ -68,7 +67,7 @@ module ParallelCoordinates {
 
         private extents = {};
 
-        constructor(data, options: Options) {
+        constructor(data : {[p: string] : string}[], options: Options) {
 
             this.scale_type = options.scale || "linear";
             this.options = options;
@@ -234,7 +233,7 @@ module ParallelCoordinates {
         }
 
 
-        private nestData(data): { key: string; values: any }[] {
+        private nestData(data : {[p: string] : string}[]): { key: string; values: any }[] {
             return d3.nest()
                 .key((d) => {
                     return d['key'];
