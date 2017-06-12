@@ -15,7 +15,8 @@ module ParallelCoordinates {
         dimensions: Array<string>,
         column_map: { [s: string]: any },
         duration: number,
-        extension: string
+        extension: string,
+        callback : (string) => void
     }
     export interface Box {
         left: number,
@@ -183,7 +184,10 @@ module ParallelCoordinates {
                         .selectAll(`g.key[rel='${d.key}']`)
                         .classed("highlight", $this.classed("highlight"));
 
-                    // callback for clicking label
+                    // execute the callback on label click
+                    if (this.options.callback != null) {
+                        this.options.callback(d.key);
+                    }
 
                     console.log(d.key);
                 })

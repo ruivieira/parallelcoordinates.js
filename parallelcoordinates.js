@@ -113,6 +113,9 @@ var ParallelCoordinates;
                 _this.keys_group
                     .selectAll("g.key[rel='" + d.key + "']")
                     .classed("highlight", $this.classed("highlight"));
+                if (_this.options.callback != null) {
+                    _this.options.callback(d.key);
+                }
                 console.log(d.key);
             })
                 .on("mouseover", function (d) {
