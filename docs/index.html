@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>parallel coordinates</title>
+	<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,300,700' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="parallelcoordinates.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.js" charset="utf-8"></script>
+	<script>window.d3||document.write('<script src="js/vendors/d3/d3.min.js"><\/script>');</script>
+
+</head>
+<body>
+	<div id="wrapper">
+		<div id="pc"></div>
+	</div>
+
+	<script src="parallelcoordinates.js"></script>
+	<script>
+
+
+                d3.csv("rankings.csv", function (q) {
+
+                    q['total'] = +q['total'];
+
+                    return q;
+
+                }, function (data) {
+
+
+                    var options = {
+
+                        container: "#pc",
+                        scale: "linear",
+
+                        columns: ["key", "A", "B", "C", "D", "E"],
+                        ref: "lang_usage",
+                        title_column: "key",
+                        scale_map: {
+                            "key": "ordinal",
+                            "A": "ordinal",
+                            "B": "ordinal",
+                            "C": "ordinal",
+                            "D": "ordinal",
+                            "E": "ordinal"
+                        },
+                        use: {
+                            "name": "A"
+                        },
+                        sorting: {
+                            "name": d3.descending
+                        },
+                        formats: {
+                            "year": "d"
+                        },
+                        dimensions: ["key", "A", "B", "C", "D", "E"],
+                        column_map: {
+                            "key": "Key",
+                            "A": "This is A",
+                            "B": "This is B",
+                            "C": "This is C",
+                            "D": "This is D",
+                            "E": "This is E"
+                        },
+                        duration: 1000,
+                        extension: "csv",
+						callback : function(label) {
+                            console.log("The callback was executed on " + label);
+						}
+                    };
+
+                    var pc = new ParallelCoordinates.ParallelCoordinates(data, options);
+
+                });
+
+
+    </script>
+
+</body>
+</html>
